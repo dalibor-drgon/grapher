@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Javascript Grapher, Function plotter and Chart generator online</title>
+	<meta charset="utf-8" /> 
+	<link rel="icon" href="data:image/x-icon;base64,AAABAAEAICAQAAEABADoAgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAGh0bACcpKAA6PTsATU9OAF1gXgBucG8AfX9+AJCTkQCjp6UAwsbEAM3QzgDe4uAA6ezqAPz//QAAAAAA7u7u7u7IUhAAJYvu7u7u7u7u7u7XIAAAAAACau7u7u7u7u7d5QAAAAAAAAF97u7u7u7rNusQAAAAAAAAA77u7u7uogCucAAAAAAAAAAq7u7u6yAATdIAAAAAAAAAAr7u7tMAAAnoAAAAAAAAAAA97u5wAAAC3kABEAAAAAAAB+7qEAAAAH6oq8qDAAAAAAGu5gAAAAAt7u7u7YEAAAAAbrIAAAAAnu7u7u7pAAAAACuAAAAACO7u7u7u7oAAAAAIQAAAAD3u7u7u7u7TAAAABCAAAACO7u7u7u7u6AAAAAIAAAAAru7u7u7u7usAAAAAAAAAAc7u7u7u7u7sEAAAAAAAAAHO7u7u7u7u7BAAAAAAAAAAvu7u7u7u7uoAAAAAIAAAAI7u7u7u7u7oAAAAAkAAAAA97u7u7u7u60AAAASAAAAACO7u7u7u7t7ZIAAIsQAAAAGe7u7u7ukn3scQHOUAAAAAGN7u7u2BADnetW7rEAAAAAA4vuqDAAAASu7e7mAAAAAAACzSAAAAAABt7u7TAAAAAAAcwQAAAAAAPO7u6hAAAAAAHNEAAAAAAa7u7u6iAAAAABzBAAAAACru7u7u6jAAAAAc0QAAAAOu7u7u7u7GEAAAHMEAAAFs7u7u7u7u7qYQABzRAAJa7u7u7u7u7u7uuEIswhSL7u7u7u4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==">
+	<meta name="description" content="Opensource javascript grapher, function plotter and chart generator. You can export them and use for totally free. ">
+	<meta name="keywords" content="javascript, grapher, graph, chart, pie, line, bar, radar, polar area, open source, free, function plotter, save, export">
+
+	<script src="jquery-3.2.1.min.js"></script>
+	<script src="Chart.min.js"></script>
+	<script src='spectrum.js'></script>
+	<link rel='stylesheet' href='spectrum.css' />
+	<style>
+
+body, html {
+	margin: 0;
+	padding: 0;
+	background-color: #ffffff;
+	font-family: Arial, sans-serif;
+}
+#graph {
+	width: 1000px;
+	margin: 100px auto;
+	padding: 0px;
+}
+#content {
+	width: 800px;
+	margin: 30px auto 50px auto;
+	padding: 15px;
+}
+input, select, textarea {
+	width: 100%;
+	border-radius: 0;
+	margin: 0;
+	padding: 5px 8px;
+	background: #fffbfb;
+	border: 1px solid #dddddd;
+	font-family: Arial, sans-serif;
+	margin-bottom: 3px;
+}
+input[type=submit] {
+	background-color: #efefef;
+}
+h3 {
+	margin: 15px 0px 10px 0px;
+}
+@media screen and (min-width: 1760px) {
+	#content {
+		width: 1760px;
+	    column-gap: 58px;
+	    -webkit-columns: 2 750px;
+	    -moz-columns: 2 750px;
+	    columns: 2 750px;
+	    margin: 0 auto 50px auto;
+	    padding: 0;
+	}
+}
+</style>
+
+</head>
+<body onload="ready();">
+<!-- This is only quick'n'dirty script for graphs rendering, when Google grapher is not enough -->
+	<div id="graph">
+		<canvas id="chart" style="width: 100%; height: 500px"></canvas>
+	</div>
+	<div id="content">
+		<p><a id="url_down" download="graph.png" style="color: #0000ee; cursor: pointer;">Download as image</a></p>
+
+		<form id="settings" method="POST" onsubmit="return chart_update();" onchange="chart_update();">
+			<input type="submit" value="Redraw is automatic">
+		</form>
+
+		<p>
+		<placeholder for="url2">Link to your settings (click to open in new window)</placeholder>
+		<a id="url2" target="_blank"><textarea readonly id="url" style="margin-bottom: 10px; height: 50px; resize: none;"></textarea></a>
+		<a href='https://github.com/dalibor-drgon/grapher' target='_blank' style='display:block;text-decoration: none'>Javascript Grapher, Free to use, under MIT license</a>
+		</p>
+	</div>
+
+	<script src="Notifier.js"></script>
+
+	<script type="text/javascript">
+
+function _eval(str) {
+	_func = str;
+	try {
+		return (function(str) {
+			return eval(str);
+		}).call(Math, str);
+	} catch(e) {
+		console.log(_e = e);
+		Notifier.error(e);
+	}
+	return null;
+}
+
+var Data = [10, 12, 30, 41, 0];
+
+Chart.defaults.global.elements.point.hitRadius=5;
+
+var form = $("#settings")[0];
+var chart_el = $("#chart")[0];
+var chart_config = {
+	type: 'line',
+	data: {
+		datasets: [/*{
+			data: [20, 50, 100, 75, 25, 0],
+			label: 'Left dataset',
+
+			// This binds the dataset to the left y axis
+			yAxisID: 'left-y-axis'
+		}*/],
+		labels: [0,1,2,3,4,5]
+	},
+	options: {
+		scales: {
+			yAxes: [{
+				id: 'left-y-axis',
+				type: 'linear',
+				position: 'left'
+			}]
+		},
+		layout: {
+			padding: {
+				left: 0,
+				right: 0,
+				top: 0,
+				bottom: 0
+			}
+		},
+		tooltips: {
+			position: 'nearest',
+			mode: 'x',
+			intersect: true
+		},
+		title: {},
+		legend: {},
+		responsive: false,
+		maintainAspectRatio: false
+	}
+};
+
+var chart;
+
+
+function v(s) {
+	if(!form.elements[s]) return null;
+	return form.elements[s].value || form.elements[s].innerHTML;
+}
+
+function i(s) {
+	return Number.parseFloat(v(s));
+}
+
+function s(s,o) {
+	form.elements[s].value = o;
+}
+
+function px(s) {
+	return s.replace('px', '');
+}
+
+function calculate(min, step, steps, n) {
+	var color = v("color"+n);
+	var label = v("label"+n);
+	var func = v("y"+n);
+	if(func == null) return;
+	if(func.indexOf('y') == -1) func = "y="+func; //add y= if missing
+
+	var data = [];
+	for(var i = 0; i < steps; i++) {
+
+		x = min; //x and y are globals and used by eval
+		_eval(func);
+		data[i] = y;
+
+		min += step;
+	}
+
+	var ds = {
+		data: data,
+		label: label,
+		yAxisID: 'left-y-axis',
+		backgroundColor: color,
+		borderWidth: 0.5,
+		hoverBorderWidth: 0
+	};
+	chart_config.data.datasets.push(ds);
+}
+
+function gen_data(min, step, steps) {
+	var arr = [];
+	for(var i = 0; i < steps; i++) {
+		arr[i] = min;
+		min += step;
+	}
+	return arr;
+}
+
+function ready() {
+	create_elements();
+
+	//Parse data after #
+
+	var ind = window.location.href.indexOf('#');
+	if(ind != -1) {
+		deparam(window.location.href.substring(ind+1), form.elements);
+	}
+
+	chart_update();
+}
+
+// el - settings or form.elements
+function chart_update() {
+	if(chart != null) chart.destroy();
+
+//Recaclulate values
+	document.getElementById("url2").href = document.getElementById("url").value = window.location.href.split("#")[0] + "#" +$(form).serialize();
+
+	_eval(v('init'));
+	var min = i('min'), max = i('max'), step = i('step');
+	var steps = Math.round((max-min)/step);
+
+	chart_config.data.labels = gen_data(min, step, steps);
+	chart_config.data.datasets = [];
+
+	calculate(min, step, steps, 1);
+	calculate(min, step, steps, 2);
+	calculate(min, step, steps, 3);
+
+
+//Set design
+	var str = v('title');
+	chart_config.options.title.display = str != null && (str = str.trim()).length > 0;
+	chart_config.options.title.text    = str;
+	chart_config.options.title.fontSize = i('titleSize');
+	if(str != null && str.length > 0) {
+		document.getElementById("url_down").download = str.replace("/", "-").replace("\\", "-") + ".png";
+	}
+
+	chart_config.type = v('type');
+
+	str = v('legend');
+	chart_config.options.legend.display = str && str != "none";
+	chart_config.options.legend.position = str;
+
+	chart_config.options.layout.padding = {
+		left: v('pad_left'),
+		right: v('pad_right'),
+		top: v('pad_top'),
+		bottom: v('pad_bottom')
+	};
+
+
+//Resize update and finish
+	chart_el.getContext("2d").canvas.width = 
+	px(document.getElementById("graph").style.width = chart_el.style.width = 
+		v('width'));
+	chart_el.getContext("2d").canvas.height = 
+	px(chart_el.style.height = 
+		v('height'));
+
+	chart = new Chart(chart_el, jQuery.extend(true, {}, chart_config));
+
+	//chart.resize();
+	//chart.update();
+
+	return false;
+}
+
+
+var dummy_id = 0;
+function id() {return "dummy"+(dummy_id++);}
+
+function create_placeholder(title, fr) {
+	var pl = document.createElement("placeholder");
+	pl['for'] = fr.id;
+	pl.id = id();
+	pl.innerHTML = title;
+	form.append(pl);
+}
+
+
+function create_select(name, title, ar) {
+	if(title == 0) title = name;
+
+	var sec = document.createElement("select");
+	sec.id = id();
+	sec.name = name;
+	create_placeholder(title, sec);
+
+	for(a in ar) {
+		var opt = document.createElement("option");
+		opt.value = ar[a];
+		opt.innerHTML = ar[a];
+		sec.append(opt);
+	}
+	form.append(sec);
+}
+
+function create_text(name, title, val) {
+	if(title == undefined || title == 0) title = name;
+
+	var sec = document.createElement("input");
+	sec.id = id();
+	sec.name = name;
+	sec.type = "text";
+	sec.value = val;
+
+	create_placeholder(title, sec);
+	form.append(sec);
+	return "#" + (sec.id);
+}
+
+function create_textarea(name, title, val) {
+	if(title == undefined || title == 0) title = name;
+
+	var sec = document.createElement("textarea");
+	sec.id = id();
+	sec.name = name;
+	sec.type = 'text';
+	sec.innerHTML = val;
+	sec.cols = 3;
+
+	create_placeholder(title, sec);
+	form.append(sec);
+
+}
+
+function create_head(title) {
+	var sec = document.createElement("h3");
+	sec.innerHTML = title;
+	form.append(sec);
+}
+
+function copy(to, obj, it) {
+	for (var i in it) {
+		var attr = it[i]
+		if (obj.hasOwnProperty(attr)) to[attr] = obj[attr];
+	}
+}
+
+function deparam(query, elements) {
+	// remove leading question mark if its there
+	if (query !== '') {
+		var pairs = query.split('&');
+		for (var i = 0; i < pairs.length; i += 1) {
+			var cur = pairs[i];
+			var eq_index = cur.indexOf('=');
+			key = (eq_index == -1) ? cur : decodeURIComponent(cur.substring(0, eq_index));
+			value = (eq_index == -1) ? null : decodeURIComponent(cur.substring(eq_index+1));
+			if(elements[key]) elements[key].value = value;
+		}
+	}
+}
+
+function colorise(el) {
+	$(el).spectrum({
+		showInitial: true,
+		showInput: true,
+		showAlpha: true,
+		preferredFormat: "rgb",
+		showPalette: true,
+		palette: [
+			["#000","#444","#666","#999","#ccc","#eee","#f3f3f3","#fff"],
+			["#f00","#f90","#ff0","#0f0","#0ff","#00f","#90f","#f0f"],
+			["#f4cccc","#fce5cd","#fff2cc","#d9ead3","#d0e0e3","#cfe2f3","#d9d2e9","#ead1dc"],
+			["#ea9999","#f9cb9c","#ffe599","#b6d7a8","#a2c4c9","#9fc5e8","#b4a7d6","#d5a6bd"],
+			["#e06666","#f6b26b","#ffd966","#93c47d","#76a5af","#6fa8dc","#8e7cc3","#c27ba0"],
+			["#c00","#e69138","#f1c232","#6aa84f","#45818e","#3d85c6","#674ea7","#a64d79"],
+			["#900","#b45f06","#bf9000","#38761d","#134f5c","#0b5394","#351c75","#741b47"],
+			["#600","#783f04","#7f6000","#274e13","#0c343d","#073763","#20124d","#4c1130"]
+		]
+
+	});
+}
+
+function download() {
+    var dt = chart_el.getContext("2d").canvas.toDataURL('image/png');
+    this.href = dt;
+};
+
+function create_elements() {
+
+	document.getElementById("url_down").addEventListener('click', download, false);
+
+// Move all math functions to global
+copy(window, Math, ["abs", "acos", "asin", "atan", "atan2", "ceil", "cos", "exp", "floor", "log", "max", "min", "pow", "random", "round", "sin", "sqrt", "tan", "PI", "E"]);
+
+// Create elements
+create_head("Calculations");
+	create_textarea("init",0,"dummy = sqrt(1 + PI)");
+	create_textarea("y1",0,"y=x*x-3*x-dummy");
+	create_textarea("y2",0,"y=-2*x*x+11.3");
+	create_textarea("y3",0,"y=62*x-123");
+
+	create_text("min",0,"0");
+	create_text("max",0,"50");
+	create_text("step",0,"1");
+
+create_head("Naming");
+
+	create_text("label1",0,"Red");
+	create_text("label2",0,"Green");
+	create_text("label3",0,"Blue");
+
+	create_text("title",0,"Something fancy going on");
+
+create_head("Design");
+
+	colorise(create_text("color1",0,"rgba(255,0,0,0.5)"));
+	colorise(create_text("color2",0,"rgba(0,255,0,0.5)"));
+	colorise(create_text("color3",0,"rgba(0,0,255,0.5)"));
+	form.append(document.createElement("br"));
+
+	var w = window,
+    d = document,
+    e = d.documentElement,
+    g = d.getElementsByTagName('body')[0],
+    x = w.innerWidth || e.clientWidth || g.clientWidth;
+
+	if(x > 820) {
+		create_text("width",0,Math.min(1200, x-20)+"px");
+	} else {
+		create_text("width",0,"800px");
+	}
+
+	create_text("height",0,"450px");
+	create_text("titleSize",0,"16");
+
+	create_select("type",0, ['line','bar','radar','polarArea'/*,'doughnut','pie','bubble','scatter'*/]);
+	create_select("legend",0, ['top','bottom','left','right','none']);
+};
+
+	</script>
+</body>
+</html>
